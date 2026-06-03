@@ -14,7 +14,12 @@
       "Bash(redis-cli --version)",
       "Bash(find d:/Project/ChinaTravelGuide -type f -name *.py -o -name *.json -o -name *.md -o -name *.txt -o -name *.yaml -o -name *.yml -o -name *.html -o -name *.js -o -name *.css)",
       "Bash(find d:/Project/ChinaTravelGuide/apps/web/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.json \\\\\\))",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git remote:*)",
+      "Bash(cd /tmp)",
+      "Bash(rm -rf chinawise-deploy)",
+      "Bash(mkdir -p chinawise-deploy)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=yes root@101.132.45.125 \"uptime\")"
     ]
   }
 }
