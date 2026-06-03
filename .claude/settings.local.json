@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx @nestjs/cli@latest new . --strict --skip-git --package-manager pnpm)",
+      "Bash(npx prisma:*)",
+      "Bash(pnpm test:*)",
+      "Bash(npx jest:*)",
+      "Bash(docker --version)",
+      "Bash(docker-compose --version)",
+      "Bash(pnpm --version)",
+      "Bash(redis-cli --version)",
+      "Bash(find d:/Project/ChinaTravelGuide -type f -name *.py -o -name *.json -o -name *.md -o -name *.txt -o -name *.yaml -o -name *.yml -o -name *.html -o -name *.js -o -name *.css)",
+      "Bash(find d:/Project/ChinaTravelGuide/apps/web/src -type f \\\\\\(-name *.ts -o -name *.tsx -o -name *.json \\\\\\))",
+      "Bash(git add:*)"
+    ]
+  }
+}

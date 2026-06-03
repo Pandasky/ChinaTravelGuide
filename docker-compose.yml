@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: chinawise-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-chinawise}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-chinawise123}
+      POSTGRES_DB: ${DB_NAME:-chinawise}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-chinawise} -d ${DB_NAME:-chinawise}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: chinawise-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (NestJS)
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: chinawise-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${DB_USER:-chinawise}:${DB_PASSWORD:-chinawise123}@postgres:5432/${DB_NAME:-chinawise}?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: 2h
+      PORT: 3000
+      # OpenRouter API
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
+      # Stripe
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      # PayPal
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      # Alibaba Cloud OSS
+      ALIBABA_OSS_ACCESS_KEY_ID: ${ALIBABA_OSS_ACCESS_KEY_ID:-}
+      ALIBABA_OSS_ACCESS_KEY_SECRET: ${ALIBABA_OSS_ACCESS_KEY_SECRET:-}
+      ALIBABA_OSS_BUCKET: ${ALIBABA_OSS_BUCKET:-chinawise}
+      ALIBABA_OSS_REGION: ${ALIBABA_OSS_REGION:-oss-cn-hangzhou}
+      # OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID:-}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET:-}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+      APPLE_KEY_ID: ${APPLE_KEY_ID:-}
+      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY:-}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate dev && pnpm run start:dev"
+
+  # Frontend (React + Vite)
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: chinawise-web
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:3000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    command: pnpm run dev -- --host
+
+volumes:
+  postgres_data:
+  redis_data:

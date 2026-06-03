@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+/* Custom Design System */
+:root {
+  /* Primary Colors */
+  --color-primary: #2C3E50;
+  --color-accent: #E67E22;
+
+  /* Background Colors */
+  --color-background: #FFFFFF;
+  --color-background-light: #F8F9FA;
+
+  /* Text Colors */
+  --color-text-primary: #333333;
+  --color-text-secondary: #6C757D;
+
+  /* Border */
+  --color-border: #DEE2E6;
+
+  /* Status Colors */
+  --color-success: #28A745;
+  --color-error: #DC3545;
+}
+
+/* Theme Configuration for Tailwind v4 */
+@theme {
+  --color-primary: #2C3E50;
+  --color-accent: #E67E22;
+  --color-bg: #FFFFFF;
+  --color-bg-light: #F8F9FA;
+  --color-text-main: #333333;
+  --color-text-muted: #6C757D;
+  --color-border-light: #DEE2E6;
+  --color-success: #28A745;
+  --color-error: #DC3545;
+
+  /* Font Family */
+  --font-sans: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-primary);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Custom Utility Classes */
+.container-custom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+  .container-custom {
+    padding: 0 2rem;
+  }
+}
+
+/* Button Base Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  font-size: 16px;
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #d35400;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-background-light);
+}
+
+/* Card Styles */
+.card {
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+}
+
+/* Input Styles */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Link Styles */
+.link {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Section Spacing */
+.section {
+  padding: 80px 0;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 48px 0;
+  }
+}

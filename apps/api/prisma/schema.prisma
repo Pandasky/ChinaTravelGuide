@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String?  // null for OAuth users
+  name      String?
+  avatar    String?  // URL to avatar image
+  country   String?
+  isAdmin   Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // OAuth fields
+  googleId    String? @unique
+  facebookId  String? @unique
+  appleId     String? @unique
+
+  // Relations
+  orders             Order[]
+  subscriptions      Subscription[]
+  reviews            Review[]
+  chatSessions       ChatSession[]
+  paymentTransactions PaymentTransaction[]
+
+  @@map("users")
+}
+
+// PDF Guide model
+model Guide {
+  id          String   @id @default(uuid())
+  title       String
+  subtitle    String?
+  description String   @db.Text
+  coverImage  String   // URL to cover image
+  pdfUrl      String   // URL to PDF file
+  price       Decimal  @db.Decimal(10, 2)
+  isFree      Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  pageCount   Int?
+  version     String   @default("1.0")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  categories Category[]
+  orders     Order[]
+  reviews    Review[]
+
+  @@map("guides")
+}
+
+// Category model for guides (cities, themes, duration)
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  type      CategoryType
+  icon      String?  // Icon name or URL
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  guides Guide[]
+
+  @@map("categories")
+}
+
+enum CategoryType {
+  CITY      // Beijing, Shanghai, etc.
+  THEME     // Food, History, Nature, etc.
+  DURATION  // 1 day, 3 days, 5 days, etc.
+  PRICE     // Free, $4.99, $9.99, etc.
+}
+
+// Order model for PDF purchases
+model Order {
+  id            String      @id @default(uuid())
+  orderNumber   String      @unique
+  userId        String
+  guideId       String
+  amount        Decimal     @db.Decimal(10, 2)
+  currency      String      @default("USD")
+  status        OrderStatus @default(PENDING)
+  paymentMethod String?     // stripe, paypal
+  paymentId     String?     // external payment ID
+  refundedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guide        Guide                 @relation(fields: [guideId], references: [id], onDelete: Restrict)
+  transactions PaymentTransaction[]
+
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// Payment Transaction model for tracking all payment attempts
+model PaymentTransaction {
+  id              String            @id @default(uuid())
+  orderId         String?
+  subscriptionId  String?
+  userId          String
+  type            TransactionType   // GUIDE_PURCHASE, SUBSCRIPTION, REFUND
+  provider        PaymentProvider   // STRIPE, PAYPAL
+  providerId      String?           // Payment provider's transaction ID
+  amount          Decimal           @db.Decimal(10, 2)
+  currency        String            @default("USD")
+  status          TransactionStatus @default(PENDING)
+  errorMessage    String?           // Error message if failed
+  retryCount      Int               @default(0)
+  metadata        String?           // JSON string for additional data
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Relations
+  order        Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_transactions")
+}
+
+enum TransactionType {
+  GUIDE_PURCHASE
+  SUBSCRIPTION
+  REFUND
+}
+
+enum PaymentProvider {
+  STRIPE
+  PAYPAL
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+// Subscription model for AI service
+model Subscription {
+  id                String               @id @default(uuid())
+  userId            String
+  plan              SubscriptionPlan
+  status            SubscriptionStatus   @default(ACTIVE)
+  price             Decimal              @db.Decimal(10, 2)
+  currency          String               @default("USD")
+  startDate         DateTime
+  endDate           DateTime
+  autoRenew         Boolean              @default(true)
+  paymentMethod     String?
+  externalId        String?              // Stripe/PayPal subscription ID
+  canceledAt        DateTime?
+  cancelAtPeriodEnd Boolean              @default(false)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  // Relations
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions PaymentTransaction[]
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionPlan {
+  DAILY    // $2.99 for 24 hours
+  WEEKLY   // $9.99 for 7 days
+  MONTHLY  // $19.99 for 30 days
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+  TRIAL
+}
+
+// Review model for guides
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  guideId   String
+  rating    Int      @db.SmallInt // 1-5
+  content   String?  @db.Text
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guide Guide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, guideId]) // One review per user per guide
+  @@map("reviews")
+}
+
+// Chat Session model for AI conversations
+model ChatSession {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String?  // Auto-generated or user-defined
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("chat_sessions")
+}
+
+// Message model for AI chat
+model Message {
+  id        String   @id @default(uuid())
+  sessionId String
+  role      MessageRole
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  // Relations
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+// FAQ model
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String   @db.Text
+  order     Int      @default(0)
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faqs")
+}
+
+// Testimonial model for homepage
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  avatar    String?  // URL to avatar
+  country   String
+  content   String   @db.Text
+  rating    Int      @default(5)
+  isVisible Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("testimonials")
+}
+
+// Site Settings model
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}

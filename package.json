@@ -1,0 +1,42 @@
+{
+  "name": "chinawise",
+  "version": "1.0.0",
+  "description": "ChinaWise - 中国智慧旅游指南平台",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm --filter web build",
+    "build:api": "pnpm --filter api build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter api test",
+    "test:cov": "pnpm --filter api test:cov",
+    "db:migrate": "pnpm --filter api db:migrate",
+    "db:migrate:prod": "pnpm --filter api db:migrate:prod",
+    "db:generate": "pnpm --filter api db:generate",
+    "db:studio": "pnpm --filter api db:studio",
+    "docker:build": "docker-compose -f docker-compose.prod.yml build",
+    "docker:up": "docker-compose -f docker-compose.prod.yml up -d",
+    "docker:down": "docker-compose -f docker-compose.prod.yml down",
+    "docker:logs": "docker-compose -f docker-compose.prod.yml logs -f",
+    "deploy": "bash scripts/deploy.sh deploy",
+    "deploy:status": "bash scripts/deploy.sh status",
+    "deploy:backup": "bash scripts/deploy.sh backup"
+  },
+  "keywords": [
+    "china",
+    "travel",
+    "guide",
+    "ai",
+    "tourism"
+  ],
+  "author": "ChinaWise Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

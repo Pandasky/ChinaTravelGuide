@@ -1,0 +1,177 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: chinawise-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chinawise-network
+    # No external port exposure in production for security
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: chinawise-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chinawise-network
+    # No external port exposure in production for security
+
+  # Backend API (NestJS)
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: production
+    container_name: chinawise-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
+      PORT: 3000
+      # OpenRouter API
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-anthropic/claude-3.5-sonnet}
+      # Stripe
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      # PayPal
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET}
+      PAYPAL_ENVIRONMENT: ${PAYPAL_ENVIRONMENT:-live}
+      # Alibaba Cloud OSS
+      ALIBABA_OSS_ACCESS_KEY_ID: ${ALIBABA_OSS_ACCESS_KEY_ID}
+      ALIBABA_OSS_ACCESS_KEY_SECRET: ${ALIBABA_OSS_ACCESS_KEY_SECRET}
+      ALIBABA_OSS_BUCKET: ${ALIBABA_OSS_BUCKET}
+      ALIBABA_OSS_REGION: ${ALIBABA_OSS_REGION}
+      ALIBABA_OSS_ENDPOINT: ${ALIBABA_OSS_ENDPOINT}
+      # OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      FACEBOOK_APP_ID: ${FACEBOOK_APP_ID}
+      FACEBOOK_APP_SECRET: ${FACEBOOK_APP_SECRET}
+      APPLE_CLIENT_ID: ${APPLE_CLIENT_ID}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID}
+      APPLE_KEY_ID: ${APPLE_KEY_ID}
+      APPLE_PRIVATE_KEY: ${APPLE_PRIVATE_KEY}
+      # Rate Limiting
+      RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+    expose:
+      - "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    networks:
+      - chinawise-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Frontend (React + Vite + Nginx)
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+    container_name: chinawise-web
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=${API_URL:-/api}
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+    networks:
+      - chinawise-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy (Optional - for SSL/HTTPS)
+  # Uncomment if you need SSL termination with Let's Encrypt
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: chinawise-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #     - certbot_data:/etc/letsencrypt
+  #     - certbot_www:/var/www/certbot
+  #   depends_on:
+  #     - web
+  #     - api
+  #   networks:
+  #     - chinawise-network
+
+  # Certbot for SSL (Optional)
+  # certbot:
+  #   image: certbot/certbot
+  #   container_name: chinawise-certbot
+  #   volumes:
+  #     - certbot_data:/etc/letsencrypt
+  #     - certbot_www:/var/www/certbot
+  #   entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  #   networks:
+  #     - chinawise-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  # certbot_data:
+  # certbot_www:
+
+networks:
+  chinawise-network:
+    driver: bridge
