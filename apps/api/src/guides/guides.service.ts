@@ -167,6 +167,7 @@ export class GuidesService {
         title: true,
         description: true,
         coverImage: true,
+        pdfUrl: true,
         pageCount: true,
         price: true,
         isFree: true,
