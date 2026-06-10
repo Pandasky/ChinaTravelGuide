@@ -1,8 +1,11 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "**/*.e2e-spec.ts"],
+  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "**/*.e2e-spec.ts", "**/__tests__/**"],
   "compilerOptions": {
     "noEmit": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
     "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,
@@ -10,6 +13,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "isolatedModules": false,
-    "emitDecoratorMetadata": false
+    "emitDecoratorMetadata": false,
+    "skipLibCheck": true
   }
 }
