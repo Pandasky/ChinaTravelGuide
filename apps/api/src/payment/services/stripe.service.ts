@@ -1,10 +1,10 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as Stripe from 'stripe';
+import Stripe from 'stripe';
 
 @Injectable()
 export class StripeService {
-  private stripe: Stripe.default;
+  private stripe: any;
   private readonly logger = new Logger(StripeService.name);
 
   constructor(private configService: ConfigService) {
@@ -21,12 +21,12 @@ export class StripeService {
   }
 
   async createCheckoutSession(params: {
-    lineItems: Stripe.default.Checkout.SessionCreateParams.LineItem[];
+    lineItems: any[];
     metadata: Record<string, string>;
     successUrl: string;
     cancelUrl: string;
     customerEmail?: string;
-  }): Promise<Stripe.default.Checkout.Session> {
+  }): Promise<any> {
     if (!this.stripe) {
       throw new BadRequestException('Stripe is not configured');
     }
@@ -49,7 +49,7 @@ export class StripeService {
     }
   }
 
-  async getSession(sessionId: string): Promise<Stripe.default.Checkout.Session> {
+  async getSession(sessionId: string): Promise<any> {
     if (!this.stripe) {
       throw new BadRequestException('Stripe is not configured');
     }
@@ -62,12 +62,12 @@ export class StripeService {
   async createRefund(
     paymentIntentId: string,
     amount?: number,
-  ): Promise<Stripe.default.Refund> {
+  ): Promise<any> {
     if (!this.stripe) {
       throw new BadRequestException('Stripe is not configured');
     }
 
-    const params: Stripe.default.RefundCreateParams = {
+    const params: any = {
       payment_intent: paymentIntentId,
     };
 
@@ -78,7 +78,7 @@ export class StripeService {
     return this.stripe.refunds.create(params);
   }
 
-  async constructEvent(payload: Buffer, signature: string): Promise<Stripe.default.Event> {
+  async constructEvent(payload: Buffer, signature: string): Promise<any> {
     if (!this.stripe) {
       throw new BadRequestException('Stripe is not configured');
     }
@@ -91,7 +91,7 @@ export class StripeService {
     return this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   }
 
-  async getPaymentIntent(paymentIntentId: string): Promise<Stripe.default.PaymentIntent> {
+  async getPaymentIntent(paymentIntentId: string): Promise<any> {
     if (!this.stripe) {
       throw new BadRequestException('Stripe is not configured');
     }
