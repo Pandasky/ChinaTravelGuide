@@ -8,6 +8,7 @@ WORKDIR /app
 
 # Copy workspace configuration
 COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml ./
 COPY apps/api/package.json ./apps/api/
 
 # Install all dependencies (including devDependencies for build)
@@ -33,6 +34,7 @@ WORKDIR /app
 
 # Copy workspace configuration
 COPY pnpm-workspace.yaml package.json ./
+COPY pnpm-lock.yaml ./
 COPY apps/api/package.json ./apps/api/
 
 # Install only production dependencies
