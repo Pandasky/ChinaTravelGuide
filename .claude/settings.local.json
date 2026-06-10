@@ -19,7 +19,11 @@
       "Bash(cd /tmp)",
       "Bash(rm -rf chinawise-deploy)",
       "Bash(mkdir -p chinawise-deploy)",
-      "Bash(ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=yes root@101.132.45.125 \"uptime\")"
+      "Bash(ssh -o StrictHostKeyChecking=no -o PasswordAuthentication=yes root@101.132.45.125 \"uptime\")",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 root@101.132.45.125 'cd /opt/chinawise/ChinaTravelGuide && pwd && ls -la')"
     ]
   }
 }

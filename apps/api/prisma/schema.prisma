@@ -40,8 +40,8 @@ model Guide {
   title       String
   subtitle    String?
   description String   @db.Text
-  coverImage  String   // URL to cover image
-  pdfUrl      String   // URL to PDF file
+  coverImage  String?  // URL to cover image (optional)
+  pdfUrl      String?  // URL to PDF file (optional)
   price       Decimal  @db.Decimal(10, 2)
   isFree      Boolean  @default(false)
   isPublished Boolean  @default(false)
