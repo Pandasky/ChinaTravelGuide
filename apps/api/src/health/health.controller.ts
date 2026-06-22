@@ -3,9 +3,10 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { HealthCheck, HealthCheckService, PrismaHealthIndicator, MemoryHealthIndicator, DiskHealthIndicator } from '@nestjs/terminus';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisHealthIndicator } from './redis.health';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('Health')
-@Controller('api/health')
+@Controller('health')
 export class HealthController {
   constructor(
     private health: HealthCheckService,
@@ -17,6 +18,7 @@ export class HealthController {
   ) {}
 
   @Get()
+  @Public()
   @HealthCheck()
   @ApiOperation({ summary: 'Basic health check' })
   async check() {
@@ -39,6 +41,7 @@ export class HealthController {
   }
 
   @Get('liveness')
+  @Public()
   @ApiOperation({ summary: 'Kubernetes liveness probe' })
   liveness() {
     return {
