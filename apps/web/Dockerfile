@@ -37,7 +37,12 @@ RUN addgroup -g 1001 -S nginx-group && \
 RUN chown -R nginx-user:nginx-group /usr/share/nginx/html && \
     chown -R nginx-user:nginx-group /var/cache/nginx && \
     chown -R nginx-user:nginx-group /var/log/nginx && \
-    chown -R nginx-user:nginx-group /etc/nginx/conf.d
+    chown -R nginx-user:nginx-group /etc/nginx/conf.d && \
+    mkdir -p /run/nginx && \
+    chown -R nginx-user:nginx-group /run/nginx
+
+# Update nginx config to use custom pid path
+RUN sed -i 's|/run/nginx.pid|/run/nginx/nginx.pid|' /etc/nginx/nginx.conf
 
 # Switch to non-root user
 USER nginx-user
